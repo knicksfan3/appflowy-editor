@@ -78,6 +78,8 @@ class FixedSizeStack {
     _list.clear();
   }
 
+  int get length => _list.length;
+
   HistoryItem get last => _list.last;
 
   bool get isEmpty => _list.isEmpty;
