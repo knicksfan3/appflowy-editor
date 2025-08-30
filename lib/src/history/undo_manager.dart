@@ -102,7 +102,6 @@ class UndoManager {
     }
     final last = undoStack.last;
     if (last.sealed) {
-      redoStack.clear();
       final item = HistoryItem();
       undoStack.push(item);
       return item;
@@ -146,6 +145,7 @@ class UndoManager {
       options: const ApplyOptions(
         recordUndo: true,
         recordRedo: false,
+        isRedoTrigger: true,
       ),
     );
   }

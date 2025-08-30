@@ -35,6 +35,7 @@ class ApplyOptions {
   const ApplyOptions({
     this.recordUndo = true,
     this.recordRedo = false,
+    this.isRedoTrigger = false,
     this.inMemoryUpdate = false,
   });
 
@@ -43,6 +44,9 @@ class ApplyOptions {
   /// the undo stack
   final bool recordUndo;
   final bool recordRedo;
+
+  /// This flag indicates that the transaction was triggered from a re-do action
+  final bool isRedoTrigger;
 
   /// This flag used to determine whether the transaction is in-memory update.
   final bool inMemoryUpdate;
@@ -274,6 +278,7 @@ class EditorState {
   /// The rules to apply to the document.
   List<DocumentRule> get documentRules => _documentRules;
   List<DocumentRule> _documentRules = [];
+
   set documentRules(List<DocumentRule> value) {
     _documentRules = value;
 
@@ -647,6 +652,9 @@ class EditorState {
   ) {
     if (options.recordUndo) {
       final undoItem = undoManager.getUndoHistoryItem();
+      if (!options.isRedoTrigger) {
+        undoManager.redoStack.clear();
+      }
       undoItem.addAll(transaction.operations);
       if (undoItem.beforeSelection == null &&
           transaction.beforeSelection != null) {
