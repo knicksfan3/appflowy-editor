@@ -255,6 +255,11 @@ class NonDeltaTextInputService extends TextInputService with TextInputClient {
   void _updateComposing(TextEditingDelta delta) {
     if (delta is TextEditingDeltaNonTextUpdate) {
       composingTextRange = delta.composing;
+    } else if (PlatformExtension.isMobile) {
+      // Mobile IMEs report the current composing segment on every delta.
+      // Keeping the previous start includes already committed syllables and
+      // makes attach() send a mismatched editing state back to the keyboard.
+      composingTextRange = delta.composing;
     } else {
       composingTextRange = composingTextRange != null &&
               composingTextRange!.start != -1 &&

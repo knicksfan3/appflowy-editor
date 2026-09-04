@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:appflowy_editor/src/editor/editor_component/service/ime/non_delta_input_service.dart';
+import 'package:appflowy_editor/src/editor/util/platform_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +10,71 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('NonDeltaTextInputService', () {
+    test(
+      'desktop keeps the composing start until a non-text update',
+      () async {
+        final inputService = NonDeltaTextInputService(
+          onInsert: (_) async => true,
+          onDelete: (_) async => true,
+          onReplace: (_) async => true,
+          onNonTextUpdate: (_) async => true,
+          onPerformAction: (_) async {},
+        );
+        inputService.composingTextRange = const TextRange(start: 0, end: 1);
+        await inputService.apply(const [
+          TextEditingDeltaInsertion(
+            oldText: ' a',
+            textInserted: 'b',
+            insertionOffset: 2,
+            selection: TextSelection.collapsed(offset: 3),
+            composing: TextRange(start: 2, end: 3),
+          ),
+        ]);
+        expect(
+          inputService.composingTextRange,
+          const TextRange(start: 0, end: 2),
+        );
+        await inputService.apply(const [
+          TextEditingDeltaNonTextUpdate(
+            oldText: ' ab',
+            selection: TextSelection.collapsed(offset: 3),
+            composing: TextRange(start: 2, end: 3),
+          ),
+        ]);
+        expect(
+          inputService.composingTextRange,
+          const TextRange(start: 1, end: 2),
+        );
+        inputService.close();
+      },
+      skip: !PlatformExtension.isDesktop,
+    );
+
+    test(
+      'macOS clears a collapsed composition for Chinese IME deletion',
+      () async {
+        final inputService = NonDeltaTextInputService(
+          onInsert: (_) async => true,
+          onDelete: (_) async => true,
+          onReplace: (_) async => true,
+          onNonTextUpdate: (_) async => true,
+          onPerformAction: (_) async {},
+        );
+        inputService.composingTextRange = const TextRange(start: 0, end: 1);
+        await inputService.apply(const [
+          TextEditingDeltaDeletion(
+            oldText: ' a',
+            deletedRange: TextRange(start: 1, end: 2),
+            selection: TextSelection.collapsed(offset: 1),
+            composing: TextRange(start: 1, end: 1),
+          ),
+        ]);
+        expect(inputService.composingTextRange, TextRange.empty);
+        inputService.close();
+      },
+      skip: !PlatformExtension.isMacOS,
+    );
+
     test('actions', () {
       bool onInsert = false,
           onDelete = false,

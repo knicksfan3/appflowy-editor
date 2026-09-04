@@ -168,6 +168,14 @@ class KeyboardServiceWidgetState extends State<KeyboardServiceWidget>
       return KeyEventResult.ignored;
     }
 
+    // A composition-only commit need not change the selection or reattach the
+    // input service, so the shortcut flag can still reflect active composition.
+    if (!enableIMEShortcuts &&
+        (textInputService.composingTextRange ?? TextRange.empty) ==
+            TextRange.empty) {
+      enableIMEShortcuts = true;
+    }
+
     if ((event is! KeyDownEvent && event is! KeyRepeatEvent) ||
         !enableIMEShortcuts) {
       if (textInputService.composingTextRange != TextRange.empty) {
