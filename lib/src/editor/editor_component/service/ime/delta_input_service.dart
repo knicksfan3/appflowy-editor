@@ -13,6 +13,11 @@ class DeltaTextInputService extends TextInputService with DeltaTextInputClient {
     required super.onPerformAction,
   });
 
+  // Flutter 3.44+ requires this; keep support for earlier Flutter versions.
+  @override
+  // ignore: override_on_non_overriding_member
+  bool onFocusReceived() => false;
+
   @override
   TextRange? composingTextRange;
 
